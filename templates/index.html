@@ -5,100 +5,227 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jobs.cz Scraper – e‑shop nabídky</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome pro ikony -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #0072c6;
+            --primary-dark: #005fa3;
+            --accent: #ffe066;
+            --bg: #f6f8fa;
+            --card-bg: #fff;
+            --radius: 18px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.09);
+        }
         body {
             font-family: 'Roboto', Arial, sans-serif;
-            background: #f6f8fa;
+            background: var(--bg);
             margin: 0;
             padding: 0;
             min-height: 100vh;
         }
         .container {
-            max-width: 480px;
-            margin: 48px auto;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            padding: 32px 24px 24px 24px;
+            max-width: 420px;
+            margin: 48px auto 0 auto;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 36px 28px 28px 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -60px; left: -60px;
+            width: 160px; height: 160px;
+            background: radial-gradient(circle, var(--accent) 60%, transparent 100%);
+            opacity: 0.18;
+            z-index: 0;
         }
         h1 {
             text-align: center;
-            font-size: 2rem;
-            margin-bottom: 8px;
+            font-size: 2.1rem;
+            margin-bottom: 6px;
+            font-weight: 700;
+            letter-spacing: -1px;
         }
-        .emoji {
-            font-size: 2.2rem;
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.08rem;
+            margin-bottom: 18px;
+        }
+        .emoji, .fa-solid, .fa-regular {
+            font-size: 2.1rem;
             vertical-align: middle;
         }
         form {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            margin-top: 24px;
+            margin-top: 18px;
+            z-index: 1;
         }
-        input[type="text"] {
-            padding: 12px;
+        label {
+            font-weight: 500;
+            margin-bottom: 2px;
+            color: #222;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        input[type="text"], input[type="email"] {
+            padding: 13px 14px;
             border-radius: 8px;
-            border: 1px solid #d1d5db;
-            font-size: 1rem;
+            border: 1.5px solid #d1d5db;
+            font-size: 1.05rem;
+            background: #f9fafb;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus, input[type="email"]:focus {
+            border: 1.5px solid var(--primary);
+            outline: none;
+            background: #fff;
         }
         button {
-            background: #0072c6;
+            background: var(--primary);
             color: #fff;
             border: none;
             border-radius: 8px;
-            padding: 12px;
-            font-size: 1.1rem;
+            padding: 13px;
+            font-size: 1.13rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.18s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,114,198,0.07);
         }
-        button:hover {
-            background: #005fa3;
+        button:hover, button:focus {
+            background: var(--primary-dark);
+            transform: translateY(-2px) scale(1.03);
         }
         .result {
             margin-top: 32px;
             text-align: center;
+            min-height: 40px;
         }
         .loader {
-            margin: 32px auto;
+            margin: 32px auto 10px auto;
             border: 6px solid #f3f3f3;
-            border-top: 6px solid #0072c6;
+            border-top: 6px solid var(--primary);
             border-radius: 50%;
             width: 48px;
             height: 48px;
             animation: spin 1s linear infinite;
+            display: inline-block;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
         }
         .footer {
             text-align: center;
             color: #888;
-            font-size: 0.95rem;
-            margin-top: 48px;
+            font-size: 1.01rem;
+            margin: 48px auto 0 auto;
+            max-width: 420px;
+        }
+        .footer .emoji, .footer .fa-solid {
+            font-size: 1.2rem;
+        }
+        .email-section {
+            margin-top: 22px;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 18px 10px 12px 10px;
+            box-shadow: 0 1px 6px rgba(0,114,198,0.04);
+        }
+        #emailForm {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #emailForm input[type="email"] {
+            min-width: 170px;
+            flex: 1 1 170px;
+        }
+        #emailForm button {
+            padding: 9px 18px;
+            font-size: 1.01rem;
+        }
+        #emailResult {
+            margin-top: 8px;
+            min-height: 20px;
+        }
+        .tip {
+            background: #eaf6ff;
+            color: #0072c6;
+            border-radius: 7px;
+            padding: 7px 12px;
+            margin: 18px 0 0 0;
+            font-size: 0.98rem;
+            display: inline-block;
+        }
+        @media (max-width: 600px) {
+            .container, .footer { max-width: 98vw; padding: 18px 4vw 18px 4vw;}
+            .container { margin: 18px auto 0 auto;}
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><span class="emoji">🛒</span> Jobs.cz e‑shop nabídky</h1>
-        <form id="searchForm">
-            <label for="keyword">Klíčové slovo <span class="emoji">🔎</span></label>
+        <h1>
+            <span class="emoji">🛒</span>
+            <span style="color:var(--primary);">Jobs.cz</span>
+            <span style="font-size:1.5rem;vertical-align:middle;">e‑shop</span>
+            <span class="emoji">💼</span>
+        </h1>
+        <div class="subtitle">
+            <span class="fa-solid fa-magnifying-glass"></span>
+            Najděte si práci v e‑commerce světě!
+        </div>
+        <form id="searchForm" autocomplete="off">
+            <label for="keyword">
+                <span class="fa-solid fa-keyboard"></span>
+                Klíčové slovo
+            </label>
             <input type="text" id="keyword" name="keyword" placeholder="např. e‑shop, ecommerce, online marketing" required>
-            <button type="submit">Vygenerovat PDF <span class="emoji">📄</span></button>
+            <button type="submit">
+                <span class="fa-solid fa-file-pdf"></span>
+                Vygenerovat PDF
+            </button>
         </form>
         <div class="result" id="result"></div>
+        <div class="email-section">
+            <div>
+                <span class="fa-solid fa-envelope"></span>
+                Chcete PDF zaslat e‑mailem?
+            </div>
+            <form id="emailForm">
+                <input type="email" id="email" name="email" placeholder="Váš e‑mail" required>
+                <button type="submit">
+                    <span class="fa-solid fa-paper-plane"></span>
+                    Odeslat PDF
+                </button>
+            </form>
+            <div id="emailResult"></div>
+        </div>
+        <div class="tip">
+            <span class="fa-solid fa-lightbulb"></span>
+            Backend generuje PDF a zajišťuje odeslání e‑mailu.
+        </div>
     </div>
     <div class="footer">
-        <span class="emoji">💡</span> Vyhledávání a PDF generuje backend (Flask).<br>
-        <span class="emoji">✉️</span> Možnost zaslat PDF e‑mailem:<br>
-        <form id="emailForm" style="margin-top:12px;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
-            <input type="email" id="email" name="email" placeholder="Váš e‑mail" required style="padding:8px;border-radius:6px;border:1px solid #d1d5db;min-width:180px;">
-            <button type="submit" style="padding:8px 16px;font-size:1rem;">Odeslat PDF <span class="emoji">✉️</span></button>
-        </form>
-        <div id="emailResult" style="margin-top:8px;"></div>
+        <span class="fa-regular fa-copyright"></span>
+        2025 &ndash; Jobs.cz Scraper &nbsp;|&nbsp;
+        <span class="fa-solid fa-code"></span> <a href="https://github.com/your-repo" style="color:#0072c6;text-decoration:none;">GitHub</a>
     </div>
     <script>
         const form = document.getElementById('searchForm');
@@ -120,7 +247,9 @@
                 const blob = await response.blob();
                 lastPdfBlob = blob;
                 const url = window.URL.createObjectURL(blob);
-                resultDiv.innerHTML = `<a href="${url}" download="jobs.pdf" style="font-size:1.2rem;font-weight:bold;">Stáhnout PDF <span class='emoji'>⬇️</span></a>`;
+                resultDiv.innerHTML = `<a href="${url}" download="jobs.pdf" style="font-size:1.2rem;font-weight:bold;display:inline-block;margin-top:10px;">
+                    <span class="fa-solid fa-download"></span> Stáhnout PDF
+                </a>`;
             } catch (err) {
                 resultDiv.innerHTML = `<span style='color:#c00;'>${err.message}</span>`;
             }
@@ -152,49 +281,3 @@
     </script>
 </body>
 </html>
-<!--
-====================
-Instrukce k nasazení:
-====================
-
-1. Backend (Flask) – Render.com:
---------------------------------
-- V kořenovém adresáři projektu musí být soubory: app.py, scrape.py, DejaVuSans.ttf, DejaVuSans-Bold.ttf, jobs.pdf, složka templates/ s index.html.
-- Vytvořte requirements.txt s balíčky: flask, requests, beautifulsoup4, reportlab, (případně další dle kódu), a knihovny pro e-mail (např. smtplib, email).
-- V app.py musí být endpointy:
-    - / (GET): renderuje index.html
-    - /generate (POST): přijímá {keyword}, vrací PDF (application/pdf)
-    - /send_email (POST): přijímá {keyword, email}, vygeneruje PDF a odešle na e-mail (vrací JSON s výsledkem)
-- Nastavte proměnné prostředí pro SMTP (např. SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD) v Render.com dashboardu.
-- Nastavte startovací příkaz: python app.py
-
-2. Frontend (GitHub Pages):
----------------------------
-- Pokud chcete frontend odděleně, stačí zkopírovat index.html (a případně styly/js) do repozitáře pro GitHub Pages.
-- Všechny API volání musí směřovat na veřejnou URL backendu na Render.com (např. https://moje-aplikace.onrender.com/generate).
-- Pro lokální vývoj lze použít Flask backend a šablonu v templates/.
-
-3. Odesílání e-mailu:
----------------------
-- Backend musí implementovat endpoint /send_email, který přijme e-mail a klíčové slovo, vygeneruje PDF a odešle jej jako přílohu.
-- SMTP údaje (server, port, uživatel, heslo) nastavte jako proměnné prostředí (neukládejte do kódu!).
-- Pro testování lze použít např. Gmail SMTP (nutno povolit přístup pro aplikace, případně použít App Password).
-
-4. Produkční tipy:
-------------------
-- Ošetřete limity a timeouty (scraping jobs.cz může být pomalý).
-- Omezte počet stránek nebo nabídek na jedno generování.
-- Logujte chyby a úspěšné odeslání e-mailu.
-- Chraňte endpointy proti zneužití (rate limiting, captcha, atd.).
-
-5. Ukázka API volání (fetch):
------------------------------
-POST /generate
-{ "keyword": "e‑shop" }
-→ application/pdf
-
-POST /send_email
-{ "keyword": "e‑shop", "email": "uzivatel@email.cz" }
-→ { "message": "PDF bylo odesláno na e‑mail." }
-
--->
