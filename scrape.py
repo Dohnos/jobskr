@@ -121,7 +121,7 @@ def parse_czech_date(date_str):
     return today
 
 def save_offers_to_pdf(offers, filename="jobs.pdf"):
-    from fpdf.enums import XPos, YPos
+    from fpdf import XPos, YPos
     # Rozdělení nabídek podle typu
     offers_pridano = [o for o in offers if o.get('type', '').lower() == 'pridano']
     offers_aktualizovano = [o for o in offers if o.get('type', '').lower() == 'aktualizovano']
