@@ -1,1 +1,200 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs.cz Scraper – e‑shop nabídky</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: #f6f8fa;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 480px;
+            margin: 48px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 32px 24px 24px 24px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .emoji {
+            font-size: 2.2rem;
+            vertical-align: middle;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+        }
+        input[type="text"] {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 1rem;
+        }
+        button {
+            background: #0072c6;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #005fa3;
+        }
+        .result {
+            margin-top: 32px;
+            text-align: center;
+        }
+        .loader {
+            margin: 32px auto;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #0072c6;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.95rem;
+            margin-top: 48px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="emoji">🛒</span> Jobs.cz e‑shop nabídky</h1>
+        <form id="searchForm">
+            <label for="keyword">Klíčové slovo <span class="emoji">🔎</span></label>
+            <input type="text" id="keyword" name="keyword" placeholder="např. e‑shop, ecommerce, online marketing" required>
+            <button type="submit">Vygenerovat PDF <span class="emoji">📄</span></button>
+        </form>
+        <div class="result" id="result"></div>
+    </div>
+    <div class="footer">
+        <span class="emoji">💡</span> Vyhledávání a PDF generuje backend (Flask).<br>
+        <span class="emoji">✉️</span> Možnost zaslat PDF e‑mailem:<br>
+        <form id="emailForm" style="margin-top:12px;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
+            <input type="email" id="email" name="email" placeholder="Váš e‑mail" required style="padding:8px;border-radius:6px;border:1px solid #d1d5db;min-width:180px;">
+            <button type="submit" style="padding:8px 16px;font-size:1rem;">Odeslat PDF <span class="emoji">✉️</span></button>
+        </form>
+        <div id="emailResult" style="margin-top:8px;"></div>
+    </div>
+    <script>
+        const form = document.getElementById('searchForm');
+        const resultDiv = document.getElementById('result');
+        let lastKeyword = '';
+        let lastPdfBlob = null;
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            resultDiv.innerHTML = '<div class="loader"></div><div>Generuji PDF, čekejte…</div>';
+            const keyword = document.getElementById('keyword').value;
+            lastKeyword = keyword;
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword })
+                });
+                if (!response.ok) throw new Error('Chyba při generování PDF.');
+                const blob = await response.blob();
+                lastPdfBlob = blob;
+                const url = window.URL.createObjectURL(blob);
+                resultDiv.innerHTML = `<a href="${url}" download="jobs.pdf" style="font-size:1.2rem;font-weight:bold;">Stáhnout PDF <span class='emoji'>⬇️</span></a>`;
+            } catch (err) {
+                resultDiv.innerHTML = `<span style='color:#c00;'>${err.message}</span>`;
+            }
+        });
+        // Odeslání PDF e-mailem
+        const emailForm = document.getElementById('emailForm');
+        const emailResult = document.getElementById('emailResult');
+        emailForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            emailResult.innerHTML = '<span class="loader" style="width:24px;height:24px;border-width:4px;"></span> Odesílám…';
+            const email = document.getElementById('email').value;
+            if (!lastKeyword) {
+                emailResult.innerHTML = '<span style="color:#c00;">Nejprve vygenerujte PDF.</span>';
+                return;
+            }
+            try {
+                const response = await fetch('/send_email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword: lastKeyword, email })
+                });
+                if (!response.ok) throw new Error('Chyba při odesílání e‑mailu.');
+                const data = await response.json();
+                emailResult.innerHTML = `<span style='color:green;'>${data.message}</span>`;
+            } catch (err) {
+                emailResult.innerHTML = `<span style='color:#c00;'>${err.message}</span>`;
+            }
+        });
+    </script>
+</body>
+</html>
+<!--
+====================
+Instrukce k nasazení:
+====================
 
+1. Backend (Flask) – Render.com:
+--------------------------------
+- V kořenovém adresáři projektu musí být soubory: app.py, scrape.py, DejaVuSans.ttf, DejaVuSans-Bold.ttf, jobs.pdf, složka templates/ s index.html.
+- Vytvořte requirements.txt s balíčky: flask, requests, beautifulsoup4, reportlab, (případně další dle kódu), a knihovny pro e-mail (např. smtplib, email).
+- V app.py musí být endpointy:
+    - / (GET): renderuje index.html
+    - /generate (POST): přijímá {keyword}, vrací PDF (application/pdf)
+    - /send_email (POST): přijímá {keyword, email}, vygeneruje PDF a odešle na e-mail (vrací JSON s výsledkem)
+- Nastavte proměnné prostředí pro SMTP (např. SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD) v Render.com dashboardu.
+- Nastavte startovací příkaz: python app.py
+
+2. Frontend (GitHub Pages):
+---------------------------
+- Pokud chcete frontend odděleně, stačí zkopírovat index.html (a případně styly/js) do repozitáře pro GitHub Pages.
+- Všechny API volání musí směřovat na veřejnou URL backendu na Render.com (např. https://moje-aplikace.onrender.com/generate).
+- Pro lokální vývoj lze použít Flask backend a šablonu v templates/.
+
+3. Odesílání e-mailu:
+---------------------
+- Backend musí implementovat endpoint /send_email, který přijme e-mail a klíčové slovo, vygeneruje PDF a odešle jej jako přílohu.
+- SMTP údaje (server, port, uživatel, heslo) nastavte jako proměnné prostředí (neukládejte do kódu!).
+- Pro testování lze použít např. Gmail SMTP (nutno povolit přístup pro aplikace, případně použít App Password).
+
+4. Produkční tipy:
+------------------
+- Ošetřete limity a timeouty (scraping jobs.cz může být pomalý).
+- Omezte počet stránek nebo nabídek na jedno generování.
+- Logujte chyby a úspěšné odeslání e-mailu.
+- Chraňte endpointy proti zneužití (rate limiting, captcha, atd.).
+
+5. Ukázka API volání (fetch):
+-----------------------------
+POST /generate
+{ "keyword": "e‑shop" }
+→ application/pdf
+
+POST /send_email
+{ "keyword": "e‑shop", "email": "uzivatel@email.cz" }
+→ { "message": "PDF bylo odesláno na e‑mail." }
+
+-->
